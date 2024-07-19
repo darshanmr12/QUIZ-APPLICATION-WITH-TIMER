@@ -1,0 +1,99 @@
+import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
+
+class Question {
+    String question;
+    String[] options;
+    char correctAnswer;
+
+    public Question(String question, String[] options, char correctAnswer) {
+        this.question = question;
+        this.options = options;
+        this.correctAnswer = correctAnswer;
+    }
+}
+
+public class QuizApplication {
+
+    private static final Question[] questions = {
+        new Question("What is the capital of France?", new String[]{"A. Paris", "B. London", "C. Berlin", "D. Madrid"}, 'A'),
+        new Question("What is 9 + 10?", new String[]{"A. 18", "B. 19", "C. 20", "D. 21"}, 'B'),
+        new Question("What is the largest planet in our Solar System?", new String[]{"A. Earth", "B. Mars", "C. Jupiter", "D. Saturn"}, 'C')
+    };
+    
+    private static int score = 0;
+    private static int currentQuestionIndex = 0;
+    private static boolean answered = false;
+    private static char userAnswer;
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        Timer timer = new Timer();
+
+        for (currentQuestionIndex = 0; currentQuestionIndex < questions.length; currentQuestionIndex++) {
+            Question currentQuestion = questions[currentQuestionIndex];
+            answered = false;
+            userAnswer = 'X'; // Default to no answer
+
+            TimerTask task = new TimerTask() {
+                private int countdown = 3; // 3 seconds for each question
+                
+                public void run() {
+                    if (!answered) {
+                        if (countdown > 0) {
+                            System.out.println("Time remaining: " + countdown + " seconds");
+                            countdown--;
+                        } else {
+                            System.out.println("\nTime's up! Moving to next question.");
+                            answered = true;
+                        }
+                    } else {
+                        cancel(); // Stop the timer task if the question is answered
+                    }
+                }
+            };
+
+            System.out.println("Question " + (currentQuestionIndex + 1) + ": " + currentQuestion.question);
+            for (String option : currentQuestion.options) {
+                System.out.println(option);
+            }
+
+            timer.scheduleAtFixedRate(task, 0, 1000); // 1-second intervals for the timer
+
+            while (!answered) {
+                if (scanner.hasNext()) {
+                    userAnswer = scanner.next().toUpperCase().charAt(0);
+                    if (userAnswer >= 'A' && userAnswer <= 'D') {
+                        answered = true;
+                    } else {
+                        System.out.println("Invalid answer. Please enter A, B, C, or D.");
+                    }
+                }
+            }
+
+            task.cancel(); // Cancel the timer if the question is answered within time
+
+            if (userAnswer == currentQuestion.correctAnswer) {
+                score++;
+            }
+        }
+
+        timer.cancel();
+        scanner.close();
+
+        displayResult();
+    }
+
+    private static void displayResult() {
+        System.out.println("\nQuiz Over!");
+        System.out.println("Your score: " + score + "/" + questions.length);
+        System.out.println("Summary:");
+        for (int i = 0; i < questions.length; i++) {
+            Question q = questions[i];
+            System.out.println("Q" + (i + 1) + ": " + q.question);
+            System.out.println("Your answer: " + (userAnswer == 'X' ? "No answer" : userAnswer));
+            System.out.println("Correct answer: " + q.correctAnswer + "\n");
+        }
+    }
+}
